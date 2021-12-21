@@ -1,0 +1,22 @@
+{
+  "name": "trello-iqb",
+  "version": "0.1.0",
+  "description": "Input Quality Bar for Trello board tasks",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "npm run lint && npm run format"
+  },
+  "keywords": [
+    "Trello",
+    "Project",
+    "Collaboration",
+    "Kanban",
+    "Cards"
+  ],
+  "author": "Borys Lebeda",
+  "license": "ISC",
+  "dependencies": {
+    "trello": "^0.3.0"
+  }
+}
