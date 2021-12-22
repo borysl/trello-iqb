@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "npm run lint && npm run format"
+    "test": "npm run lint && npm run format",
+    "format-fix": "npx prettier . --write",
+    "format": "npx prettier . --check",
+    "lint-fix": "npx eslint . --fix",
+    "lint": "npx eslint . --max-warnings=0"
   },
   "keywords": [
     "Trello",
@@ -17,6 +21,15 @@
   "author": "Borys Lebeda",
   "license": "ISC",
   "dependencies": {
-    "trello": "^0.3.0"
+    "dotenv": "^10.0.0",
+    "trello": "^0.11.0"
+  },
+  "engines": {
+    "node": ">=14",
+    "vscode": ">=1.22.0",
+    "npm": ">=8.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.5.0"
   }
 }

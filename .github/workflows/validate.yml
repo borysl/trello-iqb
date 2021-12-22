@@ -47,5 +47,7 @@ jobs:
         run: npm ci
       - name: check format for entire solution
         run: npm run format
+      - name: check linting
+        run: npm run lint
       - name: check duplicates
         run: npm run cpd
