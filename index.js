@@ -56,6 +56,16 @@ function handleError(err, res) {
   }
 }
 
+function validateToDo(card) {
+  let sins = [];
+  if (card.labels.length === 0) sins.push('No labels for classification!');
+  if (!card.desc) sins.push('Empty description!');
+  // if (card.labels.find(_ => _.name == 'FE')) {
+  //   card
+  // }
+  return sins;
+}
+
 const http = require('http');
 
 const server = http.createServer((req, res) => {
@@ -64,9 +74,14 @@ const server = http.createServer((req, res) => {
     trello.getCardsOnList(lists[2].id, (err, cards) => {
       handleError(err);
       let html =
-        '<!DOCTYPE html><html><head><title>Trello Shame</head></title><body><h1>Input quality bar for our <a href="https://trello.com/b/VkJo4Kd7/website">Trello</a></h1>';
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Trello Shame</title><body><h1>Input Quality Bar for our <a href="https://trello.com/b/VkJo4Kd7/website">Trello</a></h1>';
       cards.forEach(card => {
-        if (!card.desc) html += `<li>Card <a href="${card.url}">${card.name}</a> doesn't have description!</li>`;
+        // let checkListPromise = trello.getChecklistsOnCard(card.id);
+        // let attachmentPromise = trello.getAttachmentsOnCard(card.id);
+        // Promise.all()
+
+        let sins = validateToDo(card);
+        html += `<li>Card <a href="${card.url}">${card.name}</a> ${sins.length == 0 ? 'is OK' : sins.join(', ')} </li>`;
       });
       html += '</body></html>';
       res.writeHead(200, {
