@@ -14,11 +14,35 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 var Trello = require('trello');
-var trello = new Trello(process.env.APP_KEY, process.env.API_TOKEN);
+var trello = new Trello(process.env.TRELLO_APP_KEY, process.env.TRELLO_API_TOKEN);
 
-trello.getListsOnBoard(process.env.BOARD_ID, null, (err, result) => {
+/*
+displayBoards(process.env.TRELLO_USER_ID);
+function displayBoards(user) {
+  trello.getBoards(user, (err, boards) => {
+    handleError(err);
+    boards.forEach(board => {
+      console.log(`Board ${board.name}(${board.id})`);
+    });
+  });
+}
+
+function getListsOnBoard(boardId) {
+  return new Promise((resolve, reject) => {
+    trello.getListsOnBoard(boardId, null, (err, lists) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(lists);
+      }
+    });
+  });
+}
+*/
+
+trello.getListsOnBoard(process.env.TRELLO_BOARD_ID, null, (err, lists) => {
   handleError(err);
-  trello.getCardsOnList(result[2].id, (err, cards) => {
+  trello.getCardsOnList(lists[2].id, (err, cards) => {
     handleError(err);
     cards.forEach(card => {
       if (!card.desc) console.log(`Card ${card.url} doesn't have description!`);
