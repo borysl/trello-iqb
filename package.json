@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "npm run lint && npm run format",
+    "test": "mocha && npm run lint && npm run format",
     "format-fix": "npx prettier . --write",
     "format": "npx prettier . --check",
     "lint-fix": "npx eslint . --fix",
@@ -30,6 +30,7 @@
     "npm": ">=8.1.0"
   },
   "devDependencies": {
-    "eslint": "^8.5.0"
+    "eslint": "^8.5.0",
+    "mocha": "^9.1.3"
   }
 }
