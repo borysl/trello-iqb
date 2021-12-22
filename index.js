@@ -4,8 +4,8 @@ const ERRORS = {
   SOME_ERROR: 99,
 };
 
+const express = require('express');
 const { columns, validateTodo } = require('./trelloSettings.js');
-const fs = require('fs');
 
 if (process.env.NODE_ENV !== 'production') {
   console.log('Loading env from local file in non-production environment.');
@@ -35,8 +35,6 @@ function handleError(err, res) {
   }
 }
 
-const http = require('http');
-
 async function populateCards(cards) {
   let populatePromises = cards.map(async card => {
     let checkListPromise = trello.getChecklistsOnCard(card.id);
@@ -49,40 +47,39 @@ async function populateCards(cards) {
   await Promise.all(populatePromises);
 }
 
-const server = http.createServer(async (req, res) => {
-  if (req.url == '/favicon.ico') {
-    fs.readFile('icon.png', function (err, content) {
-      res.writeHead(200, { 'Content-Type': 'image/x-icon' });
-      res.end(content);
+const app = express();
+
+app.use(express.static('public'));
+
+app.get('/', async (req, res) => {
+  try {
+    let boards = await trello.getBoards(process.env.TRELLO_USER_ID);
+    let board = boards.find(_ => _.id === process.env.TRELLO_BOARD_ID);
+    let lists = await trello.getListsOnBoard(board.id);
+    var todoList = lists[columns['todo']];
+    let todoCards = await trello.getCardsOnList(todoList.id);
+
+    await populateCards(todoCards);
+
+    let html =
+      '<!DOCTYPE html><html><head><meta charset="UTF-8"><link rel="stylesheet" type="text/css" href="iqb.css" /><title>Trello Shame</title><body>';
+    html += `<h1>Dynamic Quality Bars for our <a href="${board.url}">Trello</a></h1>`;
+    todoCards.forEach(card => {
+      let sins = validateTodo(card);
+      html += `<li>Card <a href="${card.url}">${card.name}</a> ${
+        sins.length == 0 ? '<span class="right">is OK</span>' : '<span class="wrong">' + sins.join(', ') + '</span>'
+      }. </li>`;
     });
-  } else
-    try {
-      let boards = await trello.getBoards(process.env.TRELLO_USER_ID);
-      let board = boards.find(_ => _.id === process.env.TRELLO_BOARD_ID);
-      let lists = await trello.getListsOnBoard(board.id);
-      var todoList = lists[columns['todo']];
-      let todoCards = await trello.getCardsOnList(todoList.id);
-
-      await populateCards(todoCards);
-
-      let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Trello Shame</title><body>';
-      html += `<h1>Dynamic Quality Bars for our <a href="${board.url}">Trello</a></h1>`;
-      todoCards.forEach(card => {
-        let sins = validateTodo(card);
-        html += `<li>Card <a href="${card.url}">${card.name}</a> ${
-          sins.length == 0 ? 'is OK' : sins.join(', ')
-        }. </li>`;
-      });
-      html += '</body></html>';
-      res.writeHead(200, {
-        'Content-Type': 'text/html',
-        'Content-Length': html.length,
-        Expires: new Date().toUTCString(),
-      });
-      res.end(html, 'utf-8');
-    } catch (err) {
-      handleError(err, res);
-    }
+    html += '</body></html>';
+    res.writeHead(200, {
+      'Content-Type': 'text/html',
+      'Content-Length': html.length,
+      Expires: new Date().toUTCString(),
+    });
+    res.end(html, 'utf-8');
+  } catch (err) {
+    handleError(err, res);
+  }
 });
 
-server.listen(port);
+app.listen(port);
