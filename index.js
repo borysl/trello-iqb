@@ -13,6 +13,8 @@ if (process.env.NODE_ENV !== 'production') {
   }
 }
 
+const port = process.env.PORT || 8080;
+
 var Trello = require('trello');
 var trello = new Trello(process.env.TRELLO_APP_KEY, process.env.TRELLO_API_TOKEN);
 
@@ -40,26 +42,41 @@ function getListsOnBoard(boardId) {
 }
 */
 
-trello.getListsOnBoard(process.env.TRELLO_BOARD_ID, null, (err, lists) => {
-  handleError(err);
-  trello.getCardsOnList(lists[2].id, (err, cards) => {
+function handleError(err, res) {
+  if (err) {
+    res.write(500);
+    if (err.message) {
+      res.error(err.message);
+      res.error(`Stack: ${err.stack}`);
+    } else {
+      res.error('Unknown Trello error.');
+      res.error(JSON.stringify(err));
+    }
+    res.end();
+  }
+}
+
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+  trello.getListsOnBoard(process.env.TRELLO_BOARD_ID, null, (err, lists) => {
     handleError(err);
-    cards.forEach(card => {
-      if (!card.desc) console.log(`Card ${card.url} doesn't have description!`);
+    trello.getCardsOnList(lists[2].id, (err, cards) => {
+      handleError(err);
+      let html =
+        '<!DOCTYPE html><html><head><title>Trello Shame</head></title><body><h1>Input quality bar for our <a href="https://trello.com/b/VkJo4Kd7/website">Trello</a></h1>';
+      cards.forEach(card => {
+        if (!card.desc) html += `<li>Card <a href="${card.url}">${card.name}</a> doesn't have description!</li>`;
+      });
+      html += '</body></html>';
+      res.writeHead(200, {
+        'Content-Type': 'text/html',
+        'Content-Length': html.length,
+        Expires: new Date().toUTCString(),
+      });
+      res.end(html);
     });
-    process.exit(ERRORS.NO_ERROR);
   });
 });
 
-function handleError(err) {
-  if (err) {
-    if (err.message) {
-      console.error(err.message);
-      console.error(`Stack: ${err.stack}`);
-    } else {
-      console.error('Unknown Trello error.');
-      console.error(JSON.stringify(err));
-    }
-    process.exit(ERRORS.SOME_ERROR);
-  }
-}
+server.listen(port);
