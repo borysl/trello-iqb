@@ -59,39 +59,50 @@ function handleError(err, res) {
 function validateToDo(card) {
   let sins = [];
   if (card.labels.length === 0) sins.push('No labels for classification!');
-  if (!card.desc) sins.push('Empty description!');
-  // if (card.labels.find(_ => _.name == 'FE')) {
-  //   card
-  // }
+  if (!card.desc || card.checklists.length < 0) sins.push('Neither description nor checklist!');
+
+  if (card.labels.find(_ => _.name === 'FE')) {
+    if (card.attachments.length === 0) sins.push('No image attached to FE task!');
+  }
+
+  if (card.labels.find(_ => _.name === 'Bug')) {
+    if (!card.desc.includes('CONDITION')) sins.push('Bug contains no CONDITION');
+    if (!card.desc.includes('ACTION')) sins.push('Bug contains no ACTION');
+    if (!card.desc.includes('EXPECTED')) sins.push('Bug contains no EXPECTED');
+    if (!card.desc.includes('ACTUAL')) sins.push('Bug contains no ACTUAL');
+    if (!card.desc.match(/\d+\.\d+\.\d+\.\d+/)) sins.push('Bug contains no version');
+  }
   return sins;
 }
 
 const http = require('http');
 
-const server = http.createServer((req, res) => {
-  trello.getListsOnBoard(process.env.TRELLO_BOARD_ID, null, (err, lists) => {
-    handleError(err);
-    trello.getCardsOnList(lists[2].id, (err, cards) => {
-      handleError(err);
-      let html =
-        '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Trello Shame</title><body><h1>Input Quality Bar for our <a href="https://trello.com/b/VkJo4Kd7/website">Trello</a></h1>';
-      cards.forEach(card => {
-        // let checkListPromise = trello.getChecklistsOnCard(card.id);
-        // let attachmentPromise = trello.getAttachmentsOnCard(card.id);
-        // Promise.all()
-
-        let sins = validateToDo(card);
-        html += `<li>Card <a href="${card.url}">${card.name}</a> ${sins.length == 0 ? 'is OK' : sins.join(', ')} </li>`;
-      });
-      html += '</body></html>';
-      res.writeHead(200, {
-        'Content-Type': 'text/html',
-        'Content-Length': html.length,
-        Expires: new Date().toUTCString(),
-      });
-      res.end(html);
-    });
+const server = http.createServer(async (req, res) => {
+  let lists = await trello.getListsOnBoard(process.env.TRELLO_BOARD_ID);
+  let cards = await trello.getCardsOnList(lists[2].id);
+  let populatePromises = cards.map(async card => {
+    let checkListPromise = trello.getChecklistsOnCard(card.id);
+    let attachmentPromise = trello.getAttachmentsOnCard(card.id);
+    let [checklists, attachments] = await Promise.all([checkListPromise, attachmentPromise]);
+    card.checklists = checklists;
+    card.attachments = attachments;
   });
+
+  await Promise.all(populatePromises);
+
+  let html =
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Trello Shame</title><body><h1>Input Quality Bar for our <a href="https://trello.com/b/VkJo4Kd7/website">Trello</a></h1>';
+  cards.forEach(card => {
+    let sins = validateToDo(card);
+    html += `<li>Card <a href="${card.url}">${card.name}</a> ${sins.length == 0 ? 'is OK' : sins.join(', ')}. </li>`;
+  });
+  html += '</body></html>';
+  res.writeHead(200, {
+    'Content-Type': 'text/html',
+    'Content-Length': html.length,
+    Expires: new Date().toUTCString(),
+  });
+  res.end(html);
 });
 
 server.listen(port);
