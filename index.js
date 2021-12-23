@@ -5,7 +5,7 @@ const ERRORS = {
 };
 
 const express = require('express');
-const { columns, validateTodo } = require('./trelloSettings.js');
+const { columns, qbs } = require('./trelloSettings.js');
 
 if (process.env.NODE_ENV !== 'production') {
   console.log('Loading env from local file in non-production environment.');
@@ -47,41 +47,60 @@ async function populateCards(cards) {
   await Promise.all(populatePromises);
 }
 
+async function getDataFromTrello(column) {
+  let boards = await trello.getBoards(process.env.TRELLO_USER_ID);
+  let board = boards.find(_ => _.id === process.env.TRELLO_BOARD_ID);
+  let lists = await trello.getListsOnBoard(board.id);
+  var todoList = lists[column];
+  let cards = await trello.getCardsOnList(todoList.id);
+
+  await populateCards(cards);
+
+  console.log('Data received from Trello.');
+  return {
+    cards,
+    boardUrl: board.url,
+  };
+}
+
 const app = express();
 
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-app.get('/', async (req, res) => {
-  try {
-    let boards = await trello.getBoards(process.env.TRELLO_USER_ID);
-    let board = boards.find(_ => _.id === process.env.TRELLO_BOARD_ID);
-    let lists = await trello.getListsOnBoard(board.id);
-    var todoList = lists[columns['todo']];
-    let todoCards = await trello.getCardsOnList(todoList.id);
+addQb('/', 'todo', 'Input', 'To Do');
+addQb('/wip', 'wip', 'WIP', 'In Progress');
+addQb('/resolved', 'resolved', 'Code Review', 'Code Review / Merge');
 
-    await populateCards(todoCards);
+function addQb(path, qbName, qbFullName, columnName) {
+  app.get(path, async (req, res) => {
+    try {
+      let { cards, boardUrl } = await getDataFromTrello(columns[qbName]);
 
-    console.log('Data received from Trello');
-    var cardsAnalysis = todoCards.map(card => {
-      let sins = validateTodo(card);
-      return {
-        url: card.url,
-        name: card.name,
-        sins: sins,
+      let validate = qbs[qbName];
+
+      var cardsAnalysis = cards.map(card => {
+        let sins = validate(card);
+        return {
+          url: card.url,
+          name: card.name,
+          sins: sins,
+        };
+      });
+
+      let analysis = {
+        boardUrl,
+        cardsAnalysis,
+        columnName,
+        qbFullName,
       };
-    });
 
-    let analysis = {
-      boardUrl: board.url,
-      cardsAnalysis,
-    };
-
-    res.render('index', analysis);
-  } catch (err) {
-    handleError(err, res);
-  }
-});
+      res.render('index', analysis);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+}
 
 app.listen(port, () => {
   console.log(`Server listens port ${port}.`);

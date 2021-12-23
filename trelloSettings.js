@@ -24,11 +24,33 @@ function validateTodo(card) {
   return sins;
 }
 
+function validateWip(card) {
+  let sins = validateTodo(card);
+
+  // should have assignee
+
+  // should have branch
+
+  return sins;
+}
+
+function validateResolved(card) {
+  let sins = validateWip(card);
+
+  // Whether PR is created cannot be checked
+  // should have all checkboxes
+  return sins;
+}
+
 module.exports = {
   columns: {
     todo: 2,
     wip: 3,
     resolved: 4,
   },
-  validateTodo,
+  qbs: {
+    todo: validateTodo,
+    wip: validateWip,
+    resolved: validateResolved,
+  },
 };
