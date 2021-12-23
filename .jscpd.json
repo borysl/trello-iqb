@@ -1,20 +1,11 @@
 {
   "threshold": 7,
-  "reporters": ["html", "console", "badge"],
-  "ignore": ["node_modules", ".git"],
+  "reporters": ["html", "console"],
+  "ignore": ["node_modules", ".git", "cpd-report"],
   "absolute": false,
   "gitignore": true,
   "output": "cpd-report",
   "minLines": 5,
   "minTokens": 40,
-  "mode": "mild",
-  "formatsExts": {
-    "css": ["css"],
-    "liquid": ["liquid"],
-    "markdown": ["md"],
-    "yaml": ["yaml", "yml"],
-    "json": ["json"],
-    "javascript": ["js"],
-    "csharp": ["cs"]
-  }
+  "mode": "mild"
 }

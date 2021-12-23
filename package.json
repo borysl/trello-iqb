@@ -10,6 +10,7 @@
     "format": "npx prettier . --check",
     "lint-fix": "npx eslint . --fix",
     "lint": "npx eslint . --max-warnings=0",
+    "cpd": "npx jscpd .",
     "nodemon": "nodemon index.js -e js"
   },
   "keywords": [
@@ -34,6 +35,7 @@
   },
   "devDependencies": {
     "eslint": "^8.5.0",
+    "jscpd": "^3.4.2",
     "mocha": "^9.1.3",
     "nodemon": "^2.0.15"
   }
