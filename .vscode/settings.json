@@ -15,5 +15,7 @@
     "wireframes"
   ],
   "editor.formatOnSave": true,
-  "cSpell.ignorePaths": ["team.json"]
+  "[html]": {
+    "editor.formatOnSave": false
+  }
 }

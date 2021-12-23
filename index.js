@@ -50,6 +50,7 @@ async function populateCards(cards) {
 const app = express();
 
 app.use(express.static('public'));
+app.set('view engine', 'ejs');
 
 app.get('/', async (req, res) => {
   try {
@@ -61,25 +62,27 @@ app.get('/', async (req, res) => {
 
     await populateCards(todoCards);
 
-    let html =
-      '<!DOCTYPE html><html><head><meta charset="UTF-8"><link rel="stylesheet" type="text/css" href="iqb.css" /><title>Trello Shame</title><body>';
-    html += `<h1>Dynamic Quality Bars for our <a href="${board.url}">Trello</a></h1>`;
-    todoCards.forEach(card => {
+    console.log('Data received from Trello');
+    var cardsAnalysis = todoCards.map(card => {
       let sins = validateTodo(card);
-      html += `<li>Card <a href="${card.url}">${card.name}</a> ${
-        sins.length == 0 ? '<span class="right">is OK</span>' : '<span class="wrong">' + sins.join(', ') + '</span>'
-      }. </li>`;
+      return {
+        url: card.url,
+        name: card.name,
+        sins: sins,
+      };
     });
-    html += '</body></html>';
-    res.writeHead(200, {
-      'Content-Type': 'text/html',
-      'Content-Length': html.length,
-      Expires: new Date().toUTCString(),
-    });
-    res.end(html, 'utf-8');
+
+    let analysis = {
+      boardUrl: board.url,
+      cardsAnalysis,
+    };
+
+    res.render('index', analysis);
   } catch (err) {
     handleError(err, res);
   }
 });
 
-app.listen(port);
+app.listen(port, () => {
+  console.log(`Server listens port ${port}.`);
+});
