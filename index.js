@@ -68,7 +68,13 @@ const app = express();
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-addQb('/', 'todo', 'Input', 'To Do');
+app.get('/', async (req, res) => {
+  let ou = {
+    name: 'Web Site',
+  }
+  res.render('index', ou);
+})
+addQb('/todo', 'todo', 'Input', 'To Do');
 addQb('/wip', 'wip', 'WIP', 'In Progress');
 addQb('/resolved', 'resolved', 'Code Review', 'Code Review / Merge');
 
@@ -95,7 +101,7 @@ function addQb(path, qbName, qbFullName, columnName) {
         qbFullName,
       };
 
-      res.render('index', analysis);
+      res.render('qb', analysis);
     } catch (err) {
       handleError(err, res);
     }

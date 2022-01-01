@@ -1,24 +1,7 @@
 <%- include('header') %>
   <main>
     <div class="ui segment">
-      <h1><%= qbFullName %> Quality Bar for our <a href="<%= boardUrl %>">Trello</a></h1>
-      <h2>Column <%= columnName %> contains <%= cardsAnalysis.length %> work items</h2>
-      <ul>
-        <% cardsAnalysis.forEach(function(card) { %>
-          <li>
-            <a href="<%= card.url %>">
-              <%= card.name %>
-            </a>
-            <% if (card.sins.length===0) { %>
-              <span class="right">is OK</span>
-              <% } else { %>
-                <span class="wrong">
-                  <%= card.sins.join(', ') %>
-              </span>
-            <% } %>
-          </li>
-          <% }); %>
-      </ul>
+      <h1><%= name %></h1>
     </div>
   </main>
 
